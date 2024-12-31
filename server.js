@@ -46,24 +46,35 @@ server.on('connection', async (socket, req) => {
   }
 
   socket.on('message', async (data) => {
-    const { email, message } = JSON.parse(data);
-    console.log('Received:', message, 'from:', email);
+    const parsedData = JSON.parse(data);
+    console.log('Received:', parsedData);
 
-    // Store the message in Supabase
-    const { error } = await supabase
-      .from('messages')
-      .insert([{ room_code: roomCode, email, content: message }]);
+    if (parsedData.type === 'PLAY_SONG') {
+      // Broadcast the PLAY_SONG message to all connected clients
+      server.clients.forEach((client) => {
+        if (client.readyState === WebSocket.OPEN) {
+          client.send(JSON.stringify({ type: 'PLAY_SONG', songId: parsedData.songId }));
+        }
+      });
+    } else {
+      const { email, message } = parsedData;
 
-    if (error) {
-      console.error('Error storing message:', error);
-    }
+      // Store the message in Supabase
+      const { error } = await supabase
+        .from('messages')
+        .insert([{ room_code: roomCode, email, content: message }]);
 
-    // Broadcast the message to all connected clients
-    server.clients.forEach((client) => {
-      if (client.readyState === WebSocket.OPEN) {
-        client.send(JSON.stringify({ email, content: message }));
+      if (error) {
+        console.error('Error storing message:', error);
       }
-    });
+
+      // Broadcast the message to all connected clients
+      server.clients.forEach((client) => {
+        if (client.readyState === WebSocket.OPEN) {
+          client.send(JSON.stringify({ email, content: message }));
+        }
+      });
+    }
   });
 
   socket.on('close', () => {
