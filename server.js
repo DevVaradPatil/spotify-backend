@@ -26,7 +26,8 @@ const clearOldMessages = async () => {
 setInterval(clearOldMessages, 60 * 60 * 1000);
 
 server.on('connection', async (socket, req) => {
-  const roomCode = req.url.split('/').pop();
+  const urlParams = new URLSearchParams(req.url.split('?')[1]);
+  const roomCode = urlParams.get('roomCode');
   console.log('Client connected to room:', roomCode);
 
   // Fetch previous messages from Supabase
