@@ -42,7 +42,7 @@ server.on('connection', async (socket, req) => {
   } else {
     // Send all previous messages to the new client
     messages.forEach((message) => {
-      socket.send(JSON.stringify({ type: 'CHAT', email: message.email, content: message.content }));
+      socket.send(JSON.stringify({ type: 'CHAT', email: message.email, content: message.content, full_name: message.full_name, avatar_url: message.avatar_url }));
     });
   }
 
@@ -58,12 +58,12 @@ server.on('connection', async (socket, req) => {
         }
       });
     } else if (parsedData.type === 'CHAT') {
-      const { email, content } = parsedData;
+      const { email, content, full_name, avatar_url } = parsedData;
 
       // Store the message in Supabase
       const { error } = await supabase
         .from('messages')
-        .insert([{ room_code: roomCode, email, content }]);
+        .insert([{ room_code: roomCode, email, content, full_name, avatar_url }]);
 
       if (error) {
         console.error('Error storing message:', error);
@@ -72,7 +72,7 @@ server.on('connection', async (socket, req) => {
       // Broadcast the message to all connected clients
       server.clients.forEach((client) => {
         if (client.readyState === WebSocket.OPEN) {
-          client.send(JSON.stringify({ type: 'CHAT', email, content }));
+          client.send(JSON.stringify({ type: 'CHAT', email, content, full_name, avatar_url }));
         }
       });
     }
