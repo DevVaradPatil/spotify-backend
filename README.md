@@ -8,8 +8,9 @@ Supabase.
 
 - Clients connect to `ws://<host>:8080/<roomCode>`.
 - On connect, the server sends that room's chat history from the Supabase `messages` table.
-- `CHAT` messages are stored in Supabase and broadcast to connected clients.
-- `PLAY_SONG` messages are broadcast so everyone switches to the same track.
+- `CHAT` messages are stored in Supabase and broadcast to everyone in the same room.
+- `PLAY_SONG` messages are broadcast to the room so everyone switches to the same track.
+- Rooms are isolated: traffic in one room never reaches another.
 - Messages older than one hour are deleted every hour.
 
 ### Message format
@@ -32,7 +33,8 @@ Supabase.
 
 ```bash
 npm install
-npm start          # listens on port 8080
+npm start          # listens on $PORT, default 8080
+npm test           # room-isolation check (no Supabase needed)
 ```
 
 Create a `.env` file:
@@ -43,10 +45,5 @@ SUPABASE_SERVICE_ROLE_KEY=<service-role-key>
 ```
 
 The service-role key bypasses row-level security, so keep it server-side only.
-
-## Known limitation
-
-Broadcasts currently go to every connected client, not only clients in the same room. Room
-isolation needs a per-room client map.
 
 Built with Node.js, [`ws`](https://github.com/websockets/ws) and Supabase.
